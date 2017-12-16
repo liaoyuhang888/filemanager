@@ -3,7 +3,9 @@ __author__ = 'lyh'
 __time__ = '2017/12/15'
 
 from app.main import main
+from flask import render_template
+from flask_login import current_user, UserMixin
 
 @main.route('/', methods=['GET', 'POST'])
 def index():
-    return 'hello world!'
+    return render_template('user/register.html')
