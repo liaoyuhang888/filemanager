@@ -5,11 +5,11 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 
 loginmanager = LoginManager()
-loginmanager.login_view = 'main.index'
+loginmanager.login_view = 'user.login'
 loginmanager.session_protection = 'strong'
-loginmanager.login_message = ' please log in account'
 
 db = SQLAlchemy()
+csrf = CSRFProtect()
 
 
 def create_app(config_name):
@@ -18,9 +18,11 @@ def create_app(config_name):
     config[config_name].init_app(app)
 
     loginmanager.init_app(app)
-    CSRFProtect(app)
+    csrf.init_app(app)
     db.init_app(app)
 
     from app.main import main as main_blueprint
     app.register_blueprint(main_blueprint)
+    from app.user import user as user_blueprint
+    app.register_blueprint(user_blueprint)
     return app

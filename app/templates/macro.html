@@ -1,0 +1,8 @@
+{% macro render_field(field) %}
+    {% if field.errors %}
+
+        {% for error in field.errors %}  
+            <li style="list-style-type:none;" class="alert alert-danger">{{ error }}</li>
+        {% endfor %}  
+    {% endif %}  
+{% endmacro %}  

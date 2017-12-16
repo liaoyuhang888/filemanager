@@ -5,6 +5,11 @@ __time__ = '2017-12-16'
 from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from app import loginmanager
+
+@loginmanager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
@@ -12,7 +17,7 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(320), nullable=False, unique=True)
     hash_password = db.Column(db.String(256), nullable=False)
-    timestamp = db.Column(db.TIMESTAMP)
+    timestamp = db.Column(db.Integer)
 
     def __init__(self, name, email):
         self.name = name

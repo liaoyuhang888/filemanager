@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from 'macro.html' import render_field %}
 {% block content %}
 <div class="container-fluid">
 	<div class="row">
@@ -17,34 +18,41 @@
 						</div>
 					{% endif %}
 
-					<form class="form-horizontal" role="form" method="POST" action="user/register">
-						<input type="hidden" name="_token" value="{{ csrf_token() }}">
+					<form class="form-horizontal" role="form" method="POST" action="{{ url_for('user.register') }}">
+						<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
 						<div class="form-group">
 							<label class="col-md-4 control-label">Name</label>
 							<div class="col-md-6">
-								<input type="text" class="form-control" name="name">
+								{{ form.name(class="form-control") }}
+								{{ render_field(form.name) }}
 							</div>
 						</div>
 
 						<div class="form-group">
 							<label class="col-md-4 control-label">E-Mail Address</label>
 							<div class="col-md-6">
-								<input type="email" class="form-control" name="email">
+								<!--<input type="email" class="form-control" name="email">-->
+								{{ form.email(class="form-control") }}
+								{{ render_field(form.email) }}
 							</div>
 						</div>
 
 						<div class="form-group">
 							<label class="col-md-4 control-label">Password</label>
 							<div class="col-md-6">
-								<input type="password" class="form-control" name="password">
+								<!--<input type="password" class="form-control" name="password">-->
+								{{ form.password(class="form-control") }}
+								{{ render_field(form.password) }}
 							</div>
 						</div>
 
 						<div class="form-group">
 							<label class="col-md-4 control-label">Confirm Password</label>
 							<div class="col-md-6">
-								<input type="password" class="form-control" name="password_confirmation">
+								<!--<input type="password" class="form-control" name="password_confirmation">-->
+								{{ form.confirmPassword(class="form-control") }}
+								{{ render_field(form.confirmPassword) }}
 							</div>
 						</div>
 
