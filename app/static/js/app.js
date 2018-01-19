@@ -1,6 +1,6 @@
 (function() {
   (function($) {
-    var init, initAjaxCSRF, initBreadcrumb, initDeletion, initFileSelection, initNewFolder, initRename, initTooltip, initUpload, insertObject, populateMeta, renameInput;
+    var init, initAjaxCSRF, initBreadcrumb, initDeletion, initFileSelection, initNewFolder, initRename, initTooltip, initUpload, insertObject, populateMeta, renameInput, initDownload;
     $.fn.singleDoubleClick = function(singleClickCallback, doubleClickCallback, timeout) {
       return this.each(function() {
         var clicks, self;
@@ -12,6 +12,13 @@
             return setTimeout(function() {
               if (clicks === 1) {
                 singleClickCallback.call(self, event);
+                if ($(".selected").length > 0){
+                  $('#download_file').prop('disabled', false);
+                  $('#delete_object').prop("disabled", false);
+                }else if($(".selected").length === 0){
+                  $('#download_file').prop('disabled', true);
+                  $('#delete_object').prop("disabled", true);
+                }
               } else {
                 doubleClickCallback.call(self, event);
               }
@@ -29,6 +36,7 @@
       initUpload();
       initRename();
       initDeletion();
+      initDownload();
       return initTooltip();
     };
     initAjaxCSRF = function() {
@@ -65,10 +73,15 @@
         }
         return $("#input-folder").val("" + newFolder).focus().select();
       });
-      $("#file_system").on("focusout", ".object .name #input-folder", function() {
-        $(this).parent().trigger("submit");
-        return false;
-      });
+      $("#file_system").on(
+          {"focusout": function(e) {
+            $(this).parent().trigger("submit");
+            return false;
+          },
+          "keydown": function(e){
+            if(e.keyCode==13){
+              return false;
+            }}}, ".object .name #input-folder");
       return $("#file_system").on("submit", "#create-form", function(e) {
         var currentObject;
         e.preventDefault();
@@ -86,21 +99,23 @@
             dirName: $("#input-folder").val()
           },
           type: "PUT",
-          dataType: "json"
-        }).success(function(response) {
-          populateMeta(currentObject, "directory", response);
-          return initFileSelection(currentObject);
-        }).fail(function(response) {
-          alert("Failed to create the folder");
-          return $(this).parents(".object").removeClass("uploading").find("input-folder").focus().select();
-        }).done(function(response) {
-          return $("#new_folder").prop("disabled", false);
+          dataType: "json",
+          success: function(response){
+            populateMeta(currentObject, "directory", response);
+         },
+          error: function(response){
+            alert("Failed to create the folder");
+            return $(this).parents(".object").removeClass("uploading").find("input-folder").focus().select();
+          },
+          complete: function(response){
+             return $("#new_folder").prop("disabled", false);
+          }
         });
       });
     };
     initBreadcrumb = function() {
       var currentLink, fullPath;
-      fullPath = $("#file_system").data("dirpath");
+      fullPath = '' + $("#file_system").data("dirpath");
       if (fullPath === '/') {
         return false;
       }
@@ -111,16 +126,37 @@
       });
     };
     initUpload = function() {
-      return $("#fileupload").on("change", function() {
-        var files, formData, maxFileSize;
+      $("#fileupload").on("change", function() {
+        var files, formData, maxFileSize, upload;
         files = this.files;
+        upload = true;
         maxFileSize = $("#file_system").data("maxfilesize") - 512;
         $.each(files, function(index, file) {
-          if (file.size > maxFileSize) {
+          if (file.name.indexOf('/') !== -1) {
+            alert("File " + file.name + " is illegal");
+            upload = false;
+            return false;
+          }
+          else if (file.size > maxFileSize) {
             alert("File " + file.name + " is too large");
+            upload = false;
             return false;
           }
         });
+        function onprogress(evt){
+            var loaded = evt.loaded;                  //已经上传大小情况
+            var tot = evt.total;                      //附件总大小
+            var per = Math.floor(100*loaded/tot);      //已经上传的百分比
+            $(".progress-bar").html( per +"%" );
+            $(".progress-bar").css("width" , per +"%");
+        }
+        if (upload){
+          $('.modal-body').append('\n   <div class="progress progress-striped active" id="upload-progress">\n    <div class="progress-bar progress-bar-success" role="progressbar" style="width: 0%;">0%</div>\n   </div>');
+          $('#myModal').modal('show');
+          $('#myModal').on('hidden.bs.modal', function () {
+            $('.modal-body').children().remove();
+          });
+        }
         formData = new FormData($("#upload")[0]);
         return $.ajax({
           url: "/manager/put/file",
@@ -129,7 +165,14 @@
           data: formData,
           cache: false,
           contentType: false,
-          processData: false
+          processData: false,
+          xhr: function(){
+　　　　　　var xhr = $.ajaxSettings.xhr();
+　　　　　　if(onprogress && xhr.upload && upload) {
+　　　　　　　　xhr.upload.addEventListener("progress" , onprogress, false);
+　　　　　　　　return xhr;
+　　　　　　}
+　　　　}
         }).success(function(responses) {
           $(responses.errors).each(function(index, error) {
             return console.log(error);
@@ -161,11 +204,18 @@
       }
     };
     populateMeta = function(object, objectType, objectMeta) {
-      var link;
-      if (!objectMeta.pathinfo.dirname) {
-        link = "/home" + objectMeta.path;
-      } else {
-        link = "/home/" + objectMeta.path;
+      var link, pathList, sPath, filename;
+      pathList = objectMeta.path.split('/');
+      filename = pathList.pop();
+      sPath = pathList.join('/');
+      if (objectType === 'file') {
+        link = "/preview/" + sPath + "?filename=" + filename;
+      }else{
+        if (!objectMeta.pathinfo.dirname) {
+          link = "/home" + objectMeta.path;
+        } else {
+          link = "/home/" + objectMeta.path;
+        }
       }
       return object.removeClass("uploading").removeClass("renaming").removeClass("object-new").data("filetype", objectMeta.mime).data("basename", objectMeta.pathinfo.basename).data("fullpath", objectMeta.path).find(".name").empty().append("<a class=\"link\" href=\"" + link + "\">" + objectMeta.pathinfo.basename + "</a> <a href=\"#\" class=\"hide rename\"><span class=\"glyphicon glyphicon-pencil\" aria-hidden=\"true\"></a>").parent().children(".meta-info").empty().append("<div class=\"meta-info text-muted\">Just now</div>");
     };
@@ -216,7 +266,7 @@
     renameInput = function(object) {
       var nameInput, oldName;
       oldName = object.data("basename");
-      nameInput = "<form id=\"rename-form\">\n    <label for=\"input-file\" class=\"sr-only\">File Name</label>\n    <input type=\"text\" placeholder=\"Folder Name\" id=\"input-file\" class=\"text-center\" value=\"" + oldName + "\">\n</form>";
+      nameInput = "<form id=\"rename-form\">\n    <label for=\"input-file\" class=\"sr-only\">File Name</label>\n    <input type=\"text\" placeholder=\"Folder Name\" id=\"input-file\" class=\"text-center\" value=\"" + oldName + "\"  onkeydown=\"if(event.keyCode==13){return false;}\">\n</form>";
       object.find(".name a").hide();
       return $(nameInput).prependTo(object.find(".name")).find("#input-file").focus().select();
     };
@@ -241,7 +291,6 @@
           alert("Please select object(s) first");
           return false;
         }
-        $(this).prop("disabled", true);
         return selectedFiles.each(function(index, file) {
           var fileType;
           fileType = $(file).data("filetype");
@@ -255,6 +304,8 @@
             dataType: "json"
           }).success(function() {
             return $(file).fadeOut(500, function() {
+              $('#download_file').prop('disabled', true);
+              $('#delete_object').prop("disabled", true);
               return $(this).parent().remove();
             });
           }).fail(function() {
@@ -264,6 +315,40 @@
           });
         });
       });
+    };
+    initDownload = function() {
+      return $("#download_file").on("click", function() {
+        var selectedFiles, filePath, DownLoadFile;
+        selectedFiles = $(".selected");
+        if (selectedFiles.length === 0) {
+        $(this).prop("disabled", true);
+          alert("Please select File");
+          return false;
+        }
+        filePath = [];
+        selectedFiles.each(function(index, file) {
+          filePath.push($(file).data("fullpath"));
+        });
+        DownLoadFile = function (options) {
+          var config, $iframe, $form;
+          config = $.extend(true, { method: 'post' }, options);
+          $iframe = $('<iframe id="down-file-iframe" />');
+          $form = $('<form target="down-file-iframe" method="' + config.method + '" />');
+          $form.append('<input type="hidden" name="csrf_token" value="' + $('meta[name="csrf-token"]').attr("content") + '" />');
+          $form.attr('action', config.url);
+          for (var key in config.data) {
+            $form.append('<input type="hidden" name="' + key + '" value="' + config.data[key].join('///') + '" />');
+          }
+          $iframe.append($form);
+          $(document.body).append($iframe);
+          $form[0].submit();
+          $iframe.remove();
+        };
+        return DownLoadFile({url: '/manager/download', data:{path:filePath}});
+      });
+    };
+    initMove = function () {
+
     };
     return init();
   })(jQuery);

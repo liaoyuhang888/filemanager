@@ -4,8 +4,10 @@ __time__ = '2017-12-16'
 
 from app import db
 from flask_login import UserMixin
+from flask import current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import loginmanager
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 @loginmanager.user_loader
 def load_user(user_id):
@@ -36,3 +38,18 @@ class User(db.Model, UserMixin):
 
     def confirm_password(self, password):
         return check_password_hash(self.hash_password, password)
+
+    def generate_token(self, salt=None, expiration=3600):
+        s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
+        return s.dumps({'reset':self.id, 'email':self.email}, salt)
+
+    @staticmethod
+    def token2user(token, salt=None):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token, salt)
+        except:
+            return None
+        user = User.query.get(data.get('reset'))
+        return user
+

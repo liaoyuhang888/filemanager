@@ -9,6 +9,17 @@ basedir = os.path.dirname(os.path.abspath(__file__))
 class Config:
     SECRET_KEY = 'hard to guess string'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    ALLOWED_TYPE = ('image', 'text', 'video')
+    UPLOADED_FOLDER = os.path.join(basedir, 'uploads')
+    PER_PAGE = 24
+    MAX_FILE_SIZE = 1<<30
+    MAIL_SERVER = 'smtp.qq.com'
+    MAIL_PORT = 465
+    MAIL_USE_SSL = True
+    MAIL_USERNAME = 'liaoyu_hang@qq.com'
+    MAIL_PASSWORD = 'bjjqkfyrkxrpbhaa'
+    PASSWORD_RESET_SALT = 'reset password'
+    PASSWORD_RESET_TOKEN_EXPIRES = 60 * 60
 
     @staticmethod
     def init_app(app):

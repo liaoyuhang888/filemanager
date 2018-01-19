@@ -13,3 +13,9 @@ class RegisterForm(FlaskForm):
                 validators=[DataRequired(),Length(6, 20)])
     confirmPassword = PasswordField('Confirm Password',
                 validators=[DataRequired(), EqualTo('password', message='password must be match')])
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('Password',
+                validators=[DataRequired(),Length(6, 20)])
+    confirmPassword = PasswordField('Confirm Password',
+                                    validators=[DataRequired(), EqualTo('password', message='password must be match')])

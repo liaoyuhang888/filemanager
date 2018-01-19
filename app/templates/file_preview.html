@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="/home"><span class="glyphicon glyphicon-home" aria-hidden="true"></span></a>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="row">
+        <div id="actions" class="col-md-12">
+            <button id="download_file" type="button" class="btn btn-default" aria-label="Download File">
+                <span class="glyphicon glyphicon-cloud-download" aria-hidden="true"></span> Download
+            </button>
+        </div>
+    </div>
+</div>
+<div class="container-fluid panel panel-default">
+    <div id="file_system" class="row" data-dirpath="{{ path }}">
+        <div class="row text-center panel-heading">File Name: {{ filename }}</div>
+        <div class="row col-md-12 panel-body {% if filetype!='text'  %}text-center{% endif %} selected" data-fullpath="{{ file.path }}" data-ext="" data-basename="{{ file.pathinfo.basename }}">
+            {% if filetype == 'text' %}
+            <pre>{{ text_or_url }}</pre>
+            {% elif filetype == 'image' %}
+                <img src="{{ text_or_url }}"/>
+            {% elif filetype == 'video' %}
+                <!-- "Video For Everybody" http://camendesign.com/code/video_for_everybody -->
+            <video id="my-video" class="video-js" controls preload="auto" width="640" height="264"
+              poster="" data-setup="{}"  align="center">
+                <source src="{{ text_or_url }}" type='{{ mtype }}'>
+                <source src="{{ text_or_url }}" type='video/webm'>
+                <p class="vjs-no-js">
+                  To view this video please enable JavaScript, and consider upgrading to a web browser that
+                  <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+                </p>
+              </video>
+            {% else %}
+            <div class="file">
+                <img src="{{ url_for('static', filename='images/file.png') }}"/>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

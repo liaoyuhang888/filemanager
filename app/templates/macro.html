@@ -5,4 +5,34 @@
             <li style="list-style-type:none;" class="alert alert-danger">{{ error }}</li>
         {% endfor %}  
     {% endif %}  
-{% endmacro %}  
+{% endmacro %}
+
+{% macro pagination_widget(pagination, endpoint) %}
+<ul class="pagination">
+    <li{% if not pagination.previous_page %} class="disabled"{% endif %}>
+        <a href="{% if pagination.previous_page %}{{ url_for(endpoint, page=pagination.previous_page, **kwargs) }}{% else %}#{% endif %}">
+            «
+        </a>
+    </li>
+    {% for p in range(1, pagination.page_count + 1) %}
+        {% if p %}
+            {% if p == pagination.page %}
+            <li class="active">
+                <a href="{{ url_for(endpoint, page = p, **kwargs) }}">{{ p }}</a>
+            </li>
+            {% else %}
+            <li>
+                <a href="{{ url_for(endpoint, page = p, **kwargs) }}">{{ p }}</a>
+            </li>
+            {% endif %}
+        {% else %}
+        <li class="disabled"><a href="#">…</a></li>
+        {% endif %}
+    {% endfor %}
+    <li{% if not pagination.next_page%} class="disabled"{% endif %}>
+        <a href="{% if pagination.next_page %}{{ url_for(endpoint, page=pagination.next_page, **kwargs) }}{% else %}#{% endif %}">
+            »
+        </a>
+    </li>
+</ul>
+{% endmacro %}
