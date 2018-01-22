@@ -30,7 +30,7 @@ def index(path=u''):
     d_list = []
     f_list = []
     dirpath = '/' if not path else '{}'.format(path)
-    homepath = 'home' if not path else 'home/{}'.format(path)
+    homepath = 'home' if not path else '{}'.format(path)
     for file in os.listdir(uploaded_folder):
         filepath = os.path.join(uploaded_folder, file)
         obj = dict()
@@ -129,15 +129,16 @@ def uploads():
 def download():
     paths = request.form.get('path').split('///')
     zipfile = ZipUtilities()
-    if len(paths) == 1:
-        full_path = os.path.join(current_app.config['UPLOADED_FOLDER'], str(current_user.id), paths[0])
-        return send_file(full_path, as_attachment=True, attachment_filename=os.path.basename(full_path))
+    file_path = os.path.join(current_app.config['UPLOADED_FOLDER'], str(current_user.id), paths[0])
+    if len(paths) == 1 and os.path.isfile(file_path):
+        return send_file(file_path, as_attachment=True, attachment_filename=os.path.basename(file_path))
     for path in paths:
         full_path = os.path.join(current_app.config['UPLOADED_FOLDER'], str(current_user.id), path)
         print 'full_path',full_path
-        zipfile.toZip(full_path, 'pack')
-    filename = 'pack.zip'
+        zipfile.toZip(full_path, path)
+    filename = 'package.zip'
     response = Response(zipfile.zip_file, mimetype='application/zip')
+    #zipfile.close()
     response.headers["Content-Disposition"] = "attachment; filename={}".format(filename)
     return response
 

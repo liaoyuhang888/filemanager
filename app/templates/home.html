@@ -43,7 +43,7 @@
         {% for object in objects.items%}
             <div class="col-xs-4 col-sm-3 col-md-2 object-container">
                 <div class="object" data-filetype="{{ object.type }}" data-fullpath="{{ object.path }}" data-ext="" data-basename="{{ object.pathinfo.basename }}">
-                    <div class="icon-container">
+                    <div class="icon-container" data-toggle="tooltip" data-placement="bottom" title="{{ object.pathinfo.filesize }}">
                         <div class="icon-base {{ object.type }}"></div>
                         <div class="icon-main"></div>
                     </div>

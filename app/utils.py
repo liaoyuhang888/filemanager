@@ -36,11 +36,13 @@ class ZipUtilities:
 def _get_pathinfo(path):
     path_pattern =re.compile(r'^(.*?)[\\/]*(([^/\\]*?)(\.([^\.\\/]+?)|))[\\/\.]*$')
     results = path_pattern.search(path).groups()
+    filesize = os.path.getsize(path) if os.path.isfile(path) else getdirsize(path)
     return dict(
         dirname=results[0],
         basename=results[1],
         filename=results[1] if os.path.isdir(path) else results[2],
-        extension='' if os.path.isdir(path) else  results[3]
+        extension='' if os.path.isdir(path) else  results[3],
+        filesize=file_size(int(filesize))
     )
 
 def _get_mime(ext):
@@ -72,7 +74,13 @@ def file_size(bytesize):
     for factor, suffix in unit:
         if bytesize >= factor:
             break
-    return '%.2f %s' % (bytesize / factor, suffix)
+    return '%.2f %s' % (float(bytesize) / factor, suffix)
+
+def getdirsize(dir):
+    size = 0L
+    for root, dirs, files in os.walk(dir):
+        size += sum([os.path.getsize(os.path.join(root, file)) for file in files])
+    return size
 
 def secure_filename(filename):
     r"""Pass it a filename and it will return a secure version of it.  This
