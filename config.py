@@ -27,7 +27,7 @@ class Config:
 
 class DevelopConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'mysql://root:qq000123@localhost/filemanager?charset=utf8'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:qq000123@localhost/filemanager?charset=utf8'
 
 config = dict(
     development=DevelopConfig,
